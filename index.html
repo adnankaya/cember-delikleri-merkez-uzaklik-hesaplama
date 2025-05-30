@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merkez Uzaklık Hesaplama</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        .form-control {
+            border-radius: 10px;
+        }
+        .btn-primary {
+            border-radius: 10px;
+            background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .alert {
+            border-radius: 10px;
+        }
+        .result-box {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            text-align: center;
+            color: #343a40;
+        }
+    </style>
+</head>
+<body>
+    <div class="container d-flex justify-content-center align-items-center">
+        <div class="card p-4">
+            <h2 class="card-title text-center mb-4">Merkez Uzaklık Hesaplama</h2>
+            <div class="mb-3">
+                <label for="diameterInput" class="form-label">Diameter (ÇAP)</label>
+                <input type="number" class="form-control" id="diameterInput" placeholder="e.g., 76" value="76">
+            </div>
+            <div class="mb-3">
+                <label for="itemsInput" class="form-label">Number of Items (ADET)</label>
+                <input type="number" class="form-control" id="itemsInput" placeholder="e.g., 6" value="6">
+            </div>
+            <button type="button" class="btn btn-primary w-100 mb-3" id="calculateBtn">Hesapla</button>
+            <div id="resultDisplay" class="result-box mt-3">
+                Mesafe: <span id="distanceValue">0</span>
+            </div>
+            <div id="errorMessage" class="alert alert-danger mt-3 d-none" role="alert">
+                Please enter valid numbers for Diameter and Number of Items. Number of Items cannot be zero.
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        /**
+         * Calculates the side length of a regular polygon inscribed in a circle.
+         * Or, more generally, calculates: diameter * sin(180 degrees / numberOfItems).
+         *
+         * @param {number} diameter The diameter of the circle.
+         * @param {number} numberOfItems The number of items or sides.
+         * @returns {number} The calculated distance or side length.
+         * @throws {Error} If numberOfItems is zero, as it would lead to division by zero.
+         */
+        function calculateDistance(diameter, numberOfItems) {
+            if (numberOfItems === 0) {
+                throw new Error("numberOfItems cannot be zero as it would lead to division by zero.");
+            }
+
+            // Convert degrees to radians: angle_in_radians = angle_in_degrees * (Math.PI / 180)
+            const angleInDegrees = 180 / numberOfItems;
+            const angleInRadians = angleInDegrees * (Math.PI / 180);
+
+            // Calculate the sine of the angle
+            const sinOfAngle = Math.sin(angleInRadians);
+
+            // The formula is: diameter * sin(angleInRadians)
+            const distance = diameter * sinOfAngle;
+
+            return distance;
+        }
+
+        // Get DOM elements
+        const diameterInput = document.getElementById('diameterInput');
+        const itemsInput = document.getElementById('itemsInput');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const distanceValueSpan = document.getElementById('distanceValue');
+        const errorMessageDiv = document.getElementById('errorMessage');
+
+        /**
+         * Handles the calculation and updates the display.
+         */
+        function performCalculation() {
+            // Hide any previous error messages
+            errorMessageDiv.classList.add('d-none');
+
+            const diameter = parseFloat(diameterInput.value);
+            const numberOfItems = parseFloat(itemsInput.value);
+
+            // Validate inputs
+            if (isNaN(diameter) || isNaN(numberOfItems) || numberOfItems <= 0) {
+                errorMessageDiv.classList.remove('d-none');
+                distanceValueSpan.textContent = 'Invalid Input';
+                return;
+            }
+
+            try {
+                const result = calculateDistance(diameter, numberOfItems);
+                // Display the result, rounded to 2 decimal places for readability
+                distanceValueSpan.textContent = result.toFixed(2);
+            } catch (error) {
+                errorMessageDiv.textContent = error.message;
+                errorMessageDiv.classList.remove('d-none');
+                distanceValueSpan.textContent = 'Error';
+            }
+        }
+
+        // Add event listener to the button
+        calculateBtn.addEventListener('click', performCalculation);
+
+        // Also perform calculation on initial load with default values
+        document.addEventListener('DOMContentLoaded', performCalculation);
+
+        // Optional: Perform calculation as user types (uncomment if desired)
+        // diameterInput.addEventListener('input', performCalculation);
+        // itemsInput.addEventListener('input', performCalculation);
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Changed '/service-worker.js' to './service-worker.js' for better compatibility in various environments.
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered successfully:', registration);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
