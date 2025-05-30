@@ -15,6 +15,7 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 20px; /* Added padding for small screens */
         }
         .card {
             border-radius: 15px;
@@ -22,9 +23,18 @@
             max-width: 500px;
             width: 100%;
         }
-        .form-control {
+        /* Custom styling for larger input with border */
+        .form-control-custom {
             border-radius: 10px;
+            border: 2px solid #ced4da; /* Slightly thicker default border */
+            padding: 0.75rem 1rem; /* Increase padding for larger feel */
+            font-size: 1.1rem; /* Slightly larger font inside input */
         }
+        .form-control-custom:focus {
+            border-color: #86b7fe; /* Bootstrap's default focus color */
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
         .btn-primary {
             border-radius: 10px;
             background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
@@ -54,19 +64,19 @@
         <div class="card p-4">
             <h2 class="card-title text-center mb-4">Merkez Uzaklık Hesaplama</h2>
             <div class="mb-3">
-                <label for="diameterInput" class="form-label">Diameter (ÇAP)</label>
-                <input type="number" class="form-control" id="diameterInput" placeholder="e.g., 76" value="76">
+                <label for="diameterInput" class="form-label">Çap (Diameter)</label>
+                <input type="number" class="form-control form-control-custom" id="diameterInput" placeholder="Örneğin: 76">
             </div>
             <div class="mb-3">
-                <label for="itemsInput" class="form-label">Number of Items (ADET)</label>
-                <input type="number" class="form-control" id="itemsInput" placeholder="e.g., 6" value="6">
+                <label for="itemsInput" class="form-label">Adet (Number of Items)</label>
+                <input type="number" class="form-control form-control-custom" id="itemsInput" placeholder="Örneğin: 6">
             </div>
-            <button type="button" class="btn btn-primary w-100 mb-3" id="calculateBtn">Hesapla</button>
+            <button type="button" class="btn btn-primary btn-lg w-100 mb-3" id="calculateBtn">Hesapla</button>
             <div id="resultDisplay" class="result-box mt-3">
                 Mesafe: <span id="distanceValue">0</span>
             </div>
             <div id="errorMessage" class="alert alert-danger mt-3 d-none" role="alert">
-                Please enter valid numbers for Diameter and Number of Items. Number of Items cannot be zero.
+                Lütfen Çap ve Adet için geçerli sayılar girin. Adet sıfır veya daha az olamaz.
             </div>
         </div>
     </div>
@@ -81,11 +91,11 @@
          * @param {number} diameter The diameter of the circle.
          * @param {number} numberOfItems The number of items or sides.
          * @returns {number} The calculated distance or side length.
-         * @throws {Error} If numberOfItems is zero, as it would lead to division by zero.
+         * @throws {Error} If numberOfItems is zero or less, as it would lead to division by zero or invalid geometry.
          */
         function calculateDistance(diameter, numberOfItems) {
-            if (numberOfItems === 0) {
-                throw new Error("numberOfItems cannot be zero as it would lead to division by zero.");
+            if (numberOfItems <= 0) { // Changed to <= 0 for robustness
+                throw new Error("Adet pozitif bir sayı olmalıdır."); // Turkish error message
             }
 
             // Convert degrees to radians: angle_in_radians = angle_in_degrees * (Math.PI / 180)
@@ -118,10 +128,10 @@
             const diameter = parseFloat(diameterInput.value);
             const numberOfItems = parseFloat(itemsInput.value);
 
-            // Validate inputs
-            if (isNaN(diameter) || isNaN(numberOfItems) || numberOfItems <= 0) {
+            // Validate inputs - also check if inputs are actually empty strings
+            if (diameterInput.value.trim() === '' || itemsInput.value.trim() === '' || isNaN(diameter) || isNaN(numberOfItems) || numberOfItems <= 0) {
                 errorMessageDiv.classList.remove('d-none');
-                distanceValueSpan.textContent = 'Invalid Input';
+                distanceValueSpan.textContent = 'Geçersiz Giriş'; // Turkish for "Invalid Input"
                 return;
             }
 
@@ -132,24 +142,16 @@
             } catch (error) {
                 errorMessageDiv.textContent = error.message;
                 errorMessageDiv.classList.remove('d-none');
-                distanceValueSpan.textContent = 'Error';
+                distanceValueSpan.textContent = 'Hata'; // Turkish for "Error"
             }
         }
 
         // Add event listener to the button
         calculateBtn.addEventListener('click', performCalculation);
 
-        // Also perform calculation on initial load with default values
-        document.addEventListener('DOMContentLoaded', performCalculation);
-
-        // Optional: Perform calculation as user types (uncomment if desired)
-        // diameterInput.addEventListener('input', performCalculation);
-        // itemsInput.addEventListener('input', performCalculation);
-
-        // Register Service Worker
+        // Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Changed '/service-worker.js' to './service-worker.js' for better compatibility in various environments.
                 navigator.serviceWorker.register('./service-worker.js')
                     .then(registration => {
                         console.log('Service Worker registered successfully:', registration);
